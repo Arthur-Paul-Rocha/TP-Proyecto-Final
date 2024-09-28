@@ -1,57 +1,66 @@
-const timesheetEntries = JSON.parse(localStorage.getItem('timesheetEntries')) || [];
+const entradasTimesheet = JSON.parse(localStorage.getItem('entradasTimesheet')) || [];
 
-document.getElementById('timesheet-form').addEventListener('submit', function (e) {
+document.getElementById('formulario-timesheet').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const date = document.getElementById('date').value;
-    const hours = parseFloat(document.getElementById('hours').value);
-    const task = document.getElementById('task').value;
-    const extraHours = hours > 8 ? hours - 8 : 0;
-    const status = "Pending";
+    const fecha = document.getElementById('fecha').value;
+    const horas = parseFloat(document.getElementById('horas').value);
+    const horasExtras = parseFloat(document.getElementById('horas-extras').value);
+    const tarea = document.getElementById('tarea').value;
+    const totalHoras = horas + horasExtras;
+    const estado = "Pendiente";
 
-    const newEntry = { date, hours, task, extraHours, status };
+    const nuevaEntrada = { fecha, horas, horasExtras, totalHoras, tarea, estado };
 
-    timesheetEntries.push(newEntry);
-    localStorage.setItem('timesheetEntries', JSON.stringify(timesheetEntries));
-    renderEntries();
-    clearForm();
+    entradasTimesheet.push(nuevaEntrada);
+    localStorage.setItem('entradasTimesheet', JSON.stringify(entradasTimesheet));
+    renderizarEntradas();
+    limpiarFormulario();
 });
 
-function renderEntries() {
-    const tableBody = document.getElementById('timesheet-entries');
-    tableBody.innerHTML = '';
-    timesheetEntries.forEach(entry => {
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td>${entry.date}</td>
-            <td>${entry.hours}</td>
-            <td>${entry.task}</td>
-            <td>${entry.extraHours > 0 ? entry.extraHours : 'No extras'}</td>
-            <td>${entry.status}</td>
+function renderizarEntradas() {
+    const cuerpoTabla = document.getElementById('entradas-timesheet');
+    cuerpoTabla.innerHTML = '';
+    entradasTimesheet.forEach(entrada => {
+        const nuevaFila = document.createElement('tr');
+        nuevaFila.innerHTML = `
+            <td>${entrada.fecha}</td>
+            <td>${entrada.horas}</td>
+            <td>${entrada.horasExtras}</td>
+            <td>${entrada.totalHoras}</td>
+            <td>${entrada.tarea}</td>
+            <td>${entrada.estado}</td>
         `;
-        tableBody.appendChild(newRow);
+        cuerpoTabla.appendChild(nuevaFila);
     });
 }
 
-function clearForm() {
-    document.getElementById('date').value = '';
-    document.getElementById('hours').value = '';
-    document.getElementById('task').value = '';
+function limpiarFormulario() {
+    document.getElementById('fecha').value = '';
+    document.getElementById('horas').value = '';
+    document.getElementById('horas-extras').value = 0;
+    document.getElementById('tarea').value = '';
 }
 
-
-document.getElementById('validate-hours').addEventListener('click', function () {
-    timesheetEntries.forEach(entry => {
-        entry.status = entry.hours <= 8 ? 'Approved' : 'Rejected';
+document.getElementById('validar').addEventListener('click', function () {
+    entradasTimesheet.forEach(entrada => {
+        entrada.estado = entrada.totalHoras >= 8 ? 'Aprobado' : 'No Aprobado';
     });
-    localStorage.setItem('timesheetEntries', JSON.stringify(timesheetEntries));
-    renderEntries();
+    localStorage.setItem('entradasTimesheet', JSON.stringify(entradasTimesheet));
+    renderizarEntradas();
+});
+
+document.getElementById('consultarHoras').addEventListener('click', function () {
+    const totalHoras = entradasTimesheet.reduce((total, entrada) => total + entrada.totalHoras, 0);
+    document.getElementById('total-horas').innerText = `Total de horas trabajadas: ${totalHoras}`;
+});
+
+document.getElementById('limpiar').addEventListener('click', function () {
+    localStorage.removeItem('entradasTimesheet');
+    entradasTimesheet.length = 0;
+    renderizarEntradas(); 
+    document.getElementById('total-horas').innerText = ''; 
 });
 
 
-document.getElementById('consult-hours').addEventListener('click', function () {
-    const totalHours = timesheetEntries.reduce((total, entry) => total + entry.hours, 0);
-    document.getElementById('total-hours').innerText = `Total hours worked: ${totalHours}`;
-});
-
-renderEntries();
+renderizarEntradas();
